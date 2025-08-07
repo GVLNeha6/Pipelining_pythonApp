@@ -14,7 +14,7 @@ pipeline {
 
         stage('Set Up Python Virtual Environment') {
             steps {
-                bat '"C:\Users\ASUS\AppData\Local\Microsoft\WindowsApps\python.exe" -m venv venv'
+                bat '"C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python.exe" -m venv venv'
                 bat '.\\venv\\Scripts\\python.exe -m pip install --upgrade pip'
                 bat '.\\venv\\Scripts\\pip install -r requirements.txt'
             }
@@ -22,7 +22,7 @@ pipeline {
 
         stage('Run Flask App') {
             steps {
-                bat '.\\venv\\Scripts\\python app.py'
+                bat '.\\venv\\Scripts\\python.exe app.py'
             }
         }
     }
