@@ -1,23 +1,40 @@
 from flask import Flask, request, render_template
-from model import train_model
-import numpy as np
+import subprocess
+import os
 
 app = Flask(__name__)
-model = train_model()
 
-@app.route('/', methods=['GET', 'POST'])
+def run_command(cmd):
+    """
+    Run a shell/batch command and return its output.
+    """
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        return result.stdout + result.stderr
+    except Exception as e:
+        return str(e)
+
+# Home route to render dashboard
+@app.route('/', methods=['GET'])
 def home():
-    result = None
-    if request.method == 'POST':
-        try:
-            num1 = float(request.form['num1'])
-            num2 = float(request.form['num2'])
-            input_data = np.array([[num1, num2]])
-            prediction = model.predict(input_data, verbose=0)
-            result = f"Predicted Sum: {prediction[0][0]:.2f}"
-        except:
-            result = "Invalid input. Please enter valid numbers."
-    return render_template('index.html', result=result)
+    return render_template('index.html')
 
+# Build route
+@app.route('/build', methods=['POST'])
+def build():
+    # Call build script
+    script_path = os.path.join(os.getcwd(), "build.bat")  # Windows batch file
+    output = run_command(script_path)
+    return output
+
+# Deploy route
+@app.route('/deploy', methods=['POST'])
+def deploy():
+    # Call deploy script
+    script_path = os.path.join(os.getcwd(), "deploy.bat")  # Windows batch file
+    output = run_command(script_path)
+    return output
+
+# Run Flask app
 if __name__ == '__main__':
     app.run(debug=True)

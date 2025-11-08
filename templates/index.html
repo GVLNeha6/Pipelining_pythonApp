@@ -1,18 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Neural Network Web App</title>
+    <title>Cloud Deployment Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f7fc;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        #output {
+            background-color: #1e1e2f;
+            color: #d4d4d4;
+            font-family: monospace;
+        }
+        .btn-custom {
+            width: 150px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h2>Enter two numbers to add:</h2>
-    <form method="POST">
-        Number 1: <input type="text" name="num1"><br><br>
-        Number 2: <input type="text" name="num2"><br><br>
-        <input type="submit" value="Predict">
-    </form>
 
-    {% if result %}
-        <h3>{{ result }}</h3>
-    {% endif %}
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <h1 class="fw-bold">☁ Cloud Deployment Dashboard</h1>
+        <p class="text-muted">Trigger builds and deploy your project seamlessly</p>
+    </div>
+
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-6">
+            <div class="card p-4 text-center">
+                <button id="buildBtn" class="btn btn-primary btn-custom m-2">Build Now</button>
+                <button id="deployBtn" class="btn btn-success btn-custom m-2">Deploy Now</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card p-3">
+                <h5 class="mb-3">Logs:</h5>
+                <div id="output" class="p-3 rounded" style="height:250px; overflow-y:auto;">
+                    Logs will appear here...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function runAction(action) {
+        const output = document.getElementById('output');
+        output.innerHTML += `\n> Running ${action}...\n`;
+
+        try {
+            const res = await fetch(`/${action}`, { method: 'POST' });
+            const data = await res.text();
+            output.innerHTML += data + '\n';
+            output.scrollTop = output.scrollHeight; // auto-scroll
+        } catch (err) {
+            output.innerHTML += 'Error: ' + err + '\n';
+        }
+    }
+
+    document.getElementById('buildBtn').onclick = () => runAction('build');
+    document.getElementById('deployBtn').onclick = () => runAction('deploy');
+</script>
+
 </body>
 </html>
