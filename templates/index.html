@@ -1,74 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Cloud Deployment Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f4f7fc;
-        }
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-        #output {
-            background-color: #1e1e2f;
-            color: #d4d4d4;
-            font-family: monospace;
-        }
-        .btn-custom {
-            width: 150px;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud Deployment Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+    }
+    .navbar {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+    .navbar-brand {
+      font-weight: 700;
+      color: #00d4ff !important;
+    }
+    .hero-section {
+      text-align: center;
+      margin-top: 70px;
+    }
+    .hero-section h1 {
+      font-weight: 800;
+      color: #00e0ff;
+      text-shadow: 0 0 10px rgba(0, 224, 255, 0.5);
+    }
+    .hero-section p {
+      color: #dcdcdc;
+      margin-top: 10px;
+      font-size: 1.1rem;
+    }
+    .status-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 60px;
+      margin: 60px 0;
+    }
+    .status-circle {
+      width: 110px;
+      height: 110px;
+      border: 4px solid #555;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      font-weight: 600;
+      color: #aaa;
+      transition: all 0.4s ease;
+      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+    .status-circle.completed {
+      border-color: #00ff9d;
+      color: #00ff9d;
+      box-shadow: 0 0 15px #00ff9d;
+    }
+    .btn {
+      width: 170px;
+      padding: 12px;
+      font-weight: 600;
+      border-radius: 30px;
+      transition: 0.3s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    .btn-primary { background: #007bff; border: none; }
+    .btn-warning { background: #ffc107; border: none; color: #000; }
+    .btn-success { background: #28a745; border: none; }
+    .log-box {
+      background-color: rgba(0,0,0,0.7);
+      color: #00ffcc;
+      border-radius: 10px;
+      padding: 15px;
+      height: 250px;
+      overflow-y: auto;
+      margin-top: 30px;
+      font-family: monospace;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    }
+    .deploy-success {
+      color: #00ff9d;
+      font-weight: bold;
+      margin-top: 20px;
+      font-size: 1.3rem;
+      text-shadow: 0 0 10px #00ff9d;
+    }
+  </style>
 </head>
 <body>
+  <nav class="navbar navbar-light shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="#">CLOUD DEPLOYMENT</a>
+      <span class="text-light">Automated Build, Test & Deploy Dashboard</span>
+    </div>
+  </nav>
 
-<div class="container py-5">
-    <div class="text-center mb-4">
-        <h1 class="fw-bold">☁ Cloud Deployment Dashboard</h1>
-        <p class="text-muted">Trigger builds and deploy your project seamlessly</p>
+  <div class="container hero-section">
+    <h1>Automate Your Cloud Workflow</h1>
+    <p>Manage, monitor, and execute your CI/CD pipeline with a single click. Build, test, and deploy your app directly from this dashboard.</p>
+
+    <div class="status-section">
+      <div id="buildStatus" class="status-circle">BUILD</div>
+      <div id="testStatus" class="status-circle">TEST</div>
+      <div id="deployStatus" class="status-circle">DEPLOY</div>
     </div>
 
-    <div class="row justify-content-center mb-4">
-        <div class="col-md-6">
-            <div class="card p-4 text-center">
-                <button id="buildBtn" class="btn btn-primary btn-custom m-2">Build Now</button>
-                <button id="deployBtn" class="btn btn-success btn-custom m-2">Deploy Now</button>
-            </div>
-        </div>
+    <p id="statusText" class="text-info fw-bold">Current Status: IDLE</p>
+
+    <div class="mt-4 d-flex justify-content-center gap-3">
+      <button id="buildBtn" class="btn btn-primary">Build Now</button>
+      <button id="testBtn" class="btn btn-warning" disabled>Run Tests</button>
+      <button id="deployBtn" class="btn btn-success" disabled>Deploy Now</button>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card p-3">
-                <h5 class="mb-3">Logs:</h5>
-                <div id="output" class="p-3 rounded" style="height:250px; overflow-y:auto;">
-                    Logs will appear here...
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    <div id="deploySuccessMsg" class="deploy-success"></div>
 
-<script>
-    async function runAction(action) {
-        const output = document.getElementById('output');
-        output.innerHTML += `\n> Running ${action}...\n`;
+    <div class="log-box mt-5" id="output">Logs will appear here...</div>
+  </div>
 
-        try {
-            const res = await fetch(`/${action}`, { method: 'POST' });
-            const data = await res.text();
-            output.innerHTML += data + '\n';
-            output.scrollTop = output.scrollHeight; // auto-scroll
-        } catch (err) {
-            output.innerHTML += 'Error: ' + err + '\n';
-        }
+  <script>
+    const buildBtn = document.getElementById('buildBtn');
+    const testBtn = document.getElementById('testBtn');
+    const deployBtn = document.getElementById('deployBtn');
+    const output = document.getElementById('output');
+    const statusText = document.getElementById('statusText');
+    const deployMsg = document.getElementById('deploySuccessMsg');
+
+    function logMessage(msg) {
+      output.innerHTML += `\n${msg}`;
+      output.scrollTop = output.scrollHeight;
     }
 
-    document.getElementById('buildBtn').onclick = () => runAction('build');
-    document.getElementById('deployBtn').onclick = () => runAction('deploy');
-</script>
+    buildBtn.addEventListener('click', async () => {
+      buildBtn.disabled = true;
+      logMessage('> Starting build...');
+      statusText.textContent = 'Current Status: BUILDING...';
+      try {
+        const res = await fetch('/build', { method: 'POST' });
+        const text = await res.text();
+        logMessage(text);
+        document.getElementById('buildStatus').classList.add('completed');
+        logMessage('✅ Build completed successfully!');
+        statusText.textContent = 'Current Status: BUILD COMPLETED';
+        testBtn.disabled = false;
+      } catch (err) {
+        logMessage(`Error: ${err}`);
+      }
+    });
 
+    testBtn.addEventListener('click', async () => {
+      testBtn.disabled = true;
+      logMessage('> Running tests...');
+      statusText.textContent = 'Current Status: TESTING...';
+      try {
+        const res = await fetch('/test', { method: 'POST' });
+        const text = await res.text();
+        logMessage(text);
+        document.getElementById('testStatus').classList.add('completed');
+        logMessage('🧪 All tests passed!');
+        statusText.textContent = 'Current Status: TEST COMPLETED';
+        deployBtn.disabled = false;
+      } catch (err) {
+        logMessage(`Error: ${err}`);
+      }
+    });
+
+    deployBtn.addEventListener('click', async () => {
+      deployBtn.disabled = true;
+      logMessage('> Starting deployment...');
+      statusText.textContent = 'Current Status: DEPLOYING...';
+      try {
+        const res = await fetch('/deploy', { method: 'POST' });
+        const text = await res.text();
+        logMessage(text);
+        document.getElementById('deployStatus').classList.add('completed');
+        logMessage('🚀 Deployment completed successfully!');
+        statusText.textContent = 'Current Status: DEPLOYED SUCCESSFULLY';
+        deployMsg.textContent = '🎉 Application Deployed Successfully!';
+      } catch (err) {
+        logMessage(`Error: ${err}`);
+      }
+    });
+  </script>
 </body>
 </html>
